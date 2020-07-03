@@ -13,6 +13,7 @@
 		B617F45824AF6FE900B857CE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B617F45624AF6FE900B857CE /* Main.storyboard */; };
 		B617F45A24AF6FED00B857CE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B617F45924AF6FED00B857CE /* Assets.xcassets */; };
 		B617F45D24AF6FED00B857CE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B617F45B24AF6FED00B857CE /* LaunchScreen.storyboard */; };
+		B617F46624AF705D00B857CE /* Transceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = B617F46524AF705D00B857CE /* Transceiver.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		B617F45924AF6FED00B857CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B617F45C24AF6FED00B857CE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B617F45E24AF6FED00B857CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B617F46524AF705D00B857CE /* Transceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transceiver.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 		B617F44F24AF6FE900B857CE /* C19X-iOS-BLE */ = {
 			isa = PBXGroup;
 			children = (
+				B617F46424AF703F00B857CE /* Beacon */,
 				B617F45024AF6FE900B857CE /* AppDelegate.swift */,
 				B617F45224AF6FE900B857CE /* SceneDelegate.swift */,
 				B617F45424AF6FE900B857CE /* ViewController.swift */,
@@ -65,6 +68,14 @@
 				B617F45E24AF6FED00B857CE /* Info.plist */,
 			);
 			path = "C19X-iOS-BLE";
+			sourceTree = "<group>";
+		};
+		B617F46424AF703F00B857CE /* Beacon */ = {
+			isa = PBXGroup;
+			children = (
+				B617F46524AF705D00B857CE /* Transceiver.swift */,
+			);
+			path = Beacon;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -140,6 +151,7 @@
 			files = (
 				B617F45524AF6FE900B857CE /* ViewController.swift in Sources */,
 				B617F45124AF6FE900B857CE /* AppDelegate.swift in Sources */,
+				B617F46624AF705D00B857CE /* Transceiver.swift in Sources */,
 				B617F45324AF6FE900B857CE /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -287,6 +299,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 5NRR4P5W72;
 				INFOPLIST_FILE = "C19X-iOS-BLE/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -294,7 +307,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.c19x.C19X-iOS-BLE";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -305,6 +318,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 5NRR4P5W72;
 				INFOPLIST_FILE = "C19X-iOS-BLE/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -312,7 +326,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.c19x.C19X-iOS-BLE";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
