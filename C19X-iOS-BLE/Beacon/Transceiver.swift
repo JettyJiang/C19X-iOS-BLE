@@ -69,6 +69,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
     private let logger: Logger
     private let identifier: String
     private let serviceUUIDs: [CBUUID]
+    private let loopDelay = TimeInterval(2)
     private let dispatchQueue: DispatchQueue
     private var cbPeripherals: Set<CBPeripheral> = []
     private var cbCentralManager: CBCentralManager?
@@ -102,7 +103,6 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
     }
 
     private func centralManager(register peripheral: CBPeripheral) {
-        logger.log(.debug, "register (\(peripheral.description))")
         peripheral.delegate = self
         cbPeripherals.insert(peripheral)
     }
@@ -119,7 +119,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
     
     open func centralManager(scan central: CBCentralManager) {
         guard central.state == .poweredOn else {
-            logger.log(.fault, "scan !poweredOn (\(central.description))")
+            logger.log(.fault, "scan (\(central.description)) !poweredOn")
             return
         }
         logger.log(.debug, "scan (\(central.description)) -> didDiscover")
@@ -132,30 +132,87 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
     }
 
     private func centralManager(_ central: CBCentralManager, connect peripheral: CBPeripheral) {
-        logger.log(.debug, "connect (\(peripheral.description)) -> register, didConnect|didFailToConnect")
-        centralManager(register: peripheral)
-        dispatchQueue.asyncAfter(deadline: DispatchTime.now() + 1) {
+        self.centralManager(register: peripheral)
+        guard central.state == .poweredOn else {
+            self.logger.log(.fault, "connect (\(peripheral.description)) !notPoweredOn")
+            return
+        }
+        dispatchQueue.asyncAfter(deadline: DispatchTime.now() + loopDelay) {
+            self.logger.log(.debug, "connect (\(peripheral.description)) -> didConnect|didFailToConnect")
             central.connect(peripheral)
         }
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        guard central.state == .poweredOn else {
+            logger.log(.fault, "didConnect (\(peripheral.description)) !notPoweredOn")
+            return
+        }
         logger.log(.debug, "didConnect (\(peripheral.description)) -> didReadRSSI")
         peripheral.readRSSI()
     }
 
     func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
-        if let error = error {
-            logger.log(.fault, "didReadRSSI (\(peripheral.description)) !error (\(error.localizedDescription))")
+        guard !centralManager(disconnect: peripheral, on: error, from: "didReadRSSI") else {
             return
         }
         let rssi = RSSI.intValue
-        guard let central = cbCentralManager else {
-            logger.log(.fault, "didReadRSSI (\(peripheral.description),rssi=\(rssi.description)) !noCentralManager")
+        logger.log(.debug, "didReadRSSI (\(peripheral.description),rssi=\(rssi.description)) -> discoverServices")
+        peripheral.discoverServices(serviceUUIDs)
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        guard !centralManager(disconnect: peripheral, on: error, from: "didDiscoverServices") else {
             return
         }
-        logger.log(.debug, "didReadRSSI (\(peripheral.description),rssi=\(rssi.description)) -> disconnect")
-        centralManager(central, disconnect: peripheral)
+        guard let service = peripheral.services?.filter({serviceUUIDs.contains($0.uuid)}).first else {
+            _ = centralManager(disconnect: peripheral, on: "serviceNotFound", from: "didDiscoverServices")
+            return
+        }
+        logger.log(.debug, "didDiscoverServices (\(peripheral.description),service=\(service.description)) -> discoverCharacteristics")
+        peripheral.discoverCharacteristics(nil, for: service)
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        guard !centralManager(disconnect: peripheral, on: error, from: "didDiscoverCharacteristicsFor") else {
+            return
+        }
+        guard let characteristic = service.characteristics?.filter({$0.properties.contains(.notify)}).first else {
+            _ = centralManager(disconnect: peripheral, on: "characteristicNotFound", from: "didDiscoverCharacteristicsFor")
+            return
+        }
+        logger.log(.debug, "didDiscoverCharacteristicsFor (\(peripheral.description),characteristic=\(characteristic.description)) -> setNotifyValue")
+        peripheral.setNotifyValue(true, for: characteristic)
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        guard !centralManager(disconnect: peripheral, on: error, from: "didUpdateNotificationStateFor") else {
+            return
+        }
+        logger.log(.debug, "didUpdateNotificationStateFor (\(peripheral.description),characteristic=\(characteristic.description)) -> readRSSI")
+        if let central = cbCentralManager {
+            centralManager(scan: central)
+        }
+        dispatchQueue.asyncAfter(deadline: DispatchTime.now() + loopDelay) {
+            peripheral.readRSSI()
+        }
+    }
+
+    private func centralManager(disconnect peripheral: CBPeripheral, on error: String, from method: String) -> Bool {
+        return centralManager(disconnect: peripheral, on: NSError(domain: error, code: 0, userInfo: nil), from: method)
+    }
+    
+    private func centralManager(disconnect peripheral: CBPeripheral, on error: Error?, from method: String) -> Bool {
+        guard let error = error else {
+            return false
+        }
+        if let central = cbCentralManager {
+            logger.log(.fault, "\(method) (\(peripheral.description)) !error (\(error.localizedDescription)) -> disconnect")
+            centralManager(central, disconnect: peripheral)
+        } else {
+            logger.log(.fault, "\(method) (\(peripheral.description)) !error (\(error.localizedDescription)) !noCentralManager")
+        }
+        return true
     }
     
     private func centralManager(_ central: CBCentralManager, disconnect peripheral: CBPeripheral) {
