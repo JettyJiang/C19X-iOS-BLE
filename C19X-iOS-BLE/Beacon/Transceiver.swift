@@ -189,7 +189,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
         guard !centralManager(disconnect: peripheral, on: error, from: "didUpdateNotificationStateFor") else {
             return
         }
-        logger.log(.debug, "didUpdateNotificationStateFor (\(peripheral.description),characteristic=\(characteristic.description)) -> readRSSI")
+        logger.log(.debug, "didUpdateNotificationStateFor (\(peripheral.description),characteristic=\(characteristic.description)) -> scan, readRSSI")
         if let central = cbCentralManager {
             centralManager(scan: central)
         }
