@@ -14,6 +14,8 @@
 		B617F45A24AF6FED00B857CE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B617F45924AF6FED00B857CE /* Assets.xcassets */; };
 		B617F45D24AF6FED00B857CE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B617F45B24AF6FED00B857CE /* LaunchScreen.storyboard */; };
 		B617F46624AF705D00B857CE /* Transceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = B617F46524AF705D00B857CE /* Transceiver.swift */; };
+		B617F46924B0809800B857CE /* CodeLevelSupportRequest-20200704.txt in Resources */ = {isa = PBXBuildFile; fileRef = B617F46824B0809800B857CE /* CodeLevelSupportRequest-20200704.txt */; };
+		B617F46B24B0852C00B857CE /* FailureScenarios.txt in Resources */ = {isa = PBXBuildFile; fileRef = B617F46A24B0852C00B857CE /* FailureScenarios.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +28,8 @@
 		B617F45C24AF6FED00B857CE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B617F45E24AF6FED00B857CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B617F46524AF705D00B857CE /* Transceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transceiver.swift; sourceTree = "<group>"; };
+		B617F46824B0809800B857CE /* CodeLevelSupportRequest-20200704.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "CodeLevelSupportRequest-20200704.txt"; sourceTree = "<group>"; };
+		B617F46A24B0852C00B857CE /* FailureScenarios.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = FailureScenarios.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,6 +48,7 @@
 			children = (
 				B617F44F24AF6FE900B857CE /* C19X-iOS-BLE */,
 				B617F44E24AF6FE900B857CE /* Products */,
+				B617F46724B0807000B857CE /* Documents */,
 			);
 			sourceTree = "<group>";
 		};
@@ -76,6 +81,15 @@
 				B617F46524AF705D00B857CE /* Transceiver.swift */,
 			);
 			path = Beacon;
+			sourceTree = "<group>";
+		};
+		B617F46724B0807000B857CE /* Documents */ = {
+			isa = PBXGroup;
+			children = (
+				B617F46824B0809800B857CE /* CodeLevelSupportRequest-20200704.txt */,
+				B617F46A24B0852C00B857CE /* FailureScenarios.txt */,
+			);
+			path = Documents;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -137,8 +151,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				B617F45D24AF6FED00B857CE /* LaunchScreen.storyboard in Resources */,
+				B617F46B24B0852C00B857CE /* FailureScenarios.txt in Resources */,
 				B617F45A24AF6FED00B857CE /* Assets.xcassets in Resources */,
 				B617F45824AF6FE900B857CE /* Main.storyboard in Resources */,
+				B617F46924B0809800B857CE /* CodeLevelSupportRequest-20200704.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

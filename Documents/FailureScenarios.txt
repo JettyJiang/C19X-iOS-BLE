@@ -1,0 +1,43 @@
+2020-07-04 : Baseline working scenario
+1. Phone A and B connected in background mode, looping
+2. A placed in faraday bag, B shows pending connect
+3. Wait 1 minute
+4. A out of faraday bag, B resumes loop
+
+2020-07-04 : Baseline failure scenario A
+1. Phone A and B connected in background mode, looping
+2. A placed in faraday bag, B shows pending connect
+3. Wait 30 minutes
+4. A out of faraday bag, B shows no change
+5. Bring app on A to foreground, B shows didDiscover and resumes loop, where A has new identifier (uuid)
+
+2020-07-04 : Baseline failure scenario B
+1. Phone A and B connected in background mode, looping
+2. A placed in faraday bag, B shows pending connect
+3. Wait 30 minutes
+4. A out of faraday bag, B shows no change
+5. Bring app on B to foreground, B shows didDiscover and resumes loop, where A has new identifier (uuid)
+
+2020-07-04 : Baseline fast failure scenario A
+1. Phone A and B connected in background mode, looping
+2. A switch airplane mode ON, B shows pending connect
+3. Wait 2 minutes
+4. A switch airplane mode OFF, B shows no change (most of the time)
+5. Bring app on A to foreground, B shows didDiscover and resumes loop, where A has new identifier (uuid)
+
+2020-07-04 : Baseline fast failure scenario B
+1. Phone A and B connected in background mode, looping
+2. A switch airplane mode ON, B shows pending connect
+3. Wait 2 minutes
+4. A switch airplane mode OFF, B shows no change (most of the time)
+5. Bring app on B to foreground, B shows didDiscover and resumes loop, where A has new identifier (uuid)
+
+2020-07-04 : Baseline fast failure scenario A2
+1. Phone A and B connected in background mode, looping
+2. A switch airplane mode ON, B shows pending connect
+3. Wait 2 minutes
+4. A switch airplane mode OFF, B shows no change (most of the time)
+5. A placed in faraday bag
+6. Bring app on B to foreground, B shows no change
+7. A out of faraday bag, B shows no change
+8. Bring app on A or B to foreground, B shows didDiscover and resumes loop, where A has new identifier (uuid)

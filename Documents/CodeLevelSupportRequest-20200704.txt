@@ -1,0 +1,35 @@
+Title:
+CoreBluetooth reconnect for iOS devices fails after 20 minutes
+
+Description:
+Given two iPhones, one acts as CBPeripheral (A) advertising a service and the other as CBCentral (B) scanning for devices offering the service. While the app on both devices are in background mode, B is able to detect A (didDiscover called), then connect to A (didConnect called). If A goes out of range of B (e.g. placed in faraday bag), B will receive a didDisconnect call, and B will immediately issue a connect call to A which is pending as it is currently out of range. If A returns within range of B (e.g. taken out of faraday bag) within about 10 to 20 minutes, B will receive a didConnect call as expected. However, if A stays out of range for 30 minutes or longer, B will never receive a didConnect call. At this point, if the app on either A or B is brought to foreground, B will immediately receive a didDiscover call, showing A with a new peripheral identifier (UUID) which is different to that in the pending connect call of B. Further inspection also shows the peripheral object for A (held by B) in the pending connect call remains in a connecting state indefinitely.
+The support issue being requested is that given this scenario, CoreBluetooth should either (i) call didConnect in B for the pending connect call to A as it is the same physical device albeit with a new peripheral identifier, or (ii) call didDiscover in B and consider A as a new peripheral under a new identifier. At the moment, it does neither, thus making it impossible for A and B to reconnect in the background after a short period of being out of range.
+Additional information that might assist the investigation:
+1. My experiments have shown that the didDiscover call in B is only ever called once for the initial discovery of A while the apps are in background mode. If the CBCentralManager in B is destroyed (deinit) and a new instance created (init), a new scanForPeripheral call by a new CBCentralManager instance still won't generate a didDiscover call for A under the existing or new identifier.
+2. My experiments have also shown the underlying OS (bluetoothd) is tracking the devices and able to resolve the change of identifier for short periods. For example, if B performs scan -> connect -> discoverServices -> discoverCharacteristics -> setNotifyValue(true) for a notifying characteristic offered by A. If A goes out of range, B will show didDisconnect and A will show didUnsubscribe. If A cycles airplane mode ON/OFF to trigger identifier change (works most of the time) and return back in range within a minute, A will show didSubscribe and B will show A under a new identifier when retrieveConnectedPeripherals is called. This is evidence that iOS is able to handle the change of peripheral identifier but the information is not passed to the app via CoreBluetooth.
+
+Configuration
+Phone A or B
+Model name : iPhone X
+Model number : MQAF2B/A
+Software version : 13.2.3 (17B111)
+
+Phone B or A
+Model name : iPhone X
+Model number : MQAD2B/A
+Software version : 13.5.1 (17F80)
+
+Xcode
+Software version : 11.5 (11E608c)
+Deployment target : iOS 13.0
+
+Steps to reproduce
+A test Xcode project has been published on GitHub (https://github.com/c19x/C19X-iOS-BLE) for demonstrating this issue. The app has no GUI but extensive logging for inspection in Xcode.
+1. Clone project in Xcode and deploy app to two iPhones, A and B.
+2. Start app on both phones, log should show didDiscover -> connect -> readRSSI -> disconnect -> connect loop running indefinitely.
+3. Go to home screen on both phones, this moves app to background mode and turn off display. The connect/disconnect loop should continue running.
+4. Keep one phone B connected to Xcode, disconnect the other phone A and place it in faraday bag or move it out of range. Phone B log should show didDisconnect and issue a connect (pending) call to A.
+5. If A returns within range (or taken out of faraday bag) in < 5 minutes, Phone B log should show didConnect and resume the connect/disconnect loop as expected.
+6. If A returns within range (or taken out of faraday bag) in > 30 minutes, Phone B log should show no change.
+7. While A and B are within range and B is not showing didConnect, bring the app on either A or B into foreground. Phone B log should show didDiscover where A is now under a new identifier and the loop resumes.
+The expected behaviour is for B to either show (i) didConnect or (ii) didDiscover in step 6 without manually bringing the app back into foreground on one of the phones.
