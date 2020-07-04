@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		B617F45124AF6FE900B857CE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B617F45024AF6FE900B857CE /* AppDelegate.swift */; };
-		B617F45324AF6FE900B857CE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B617F45224AF6FE900B857CE /* SceneDelegate.swift */; };
 		B617F45524AF6FE900B857CE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B617F45424AF6FE900B857CE /* ViewController.swift */; };
 		B617F45824AF6FE900B857CE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B617F45624AF6FE900B857CE /* Main.storyboard */; };
 		B617F45A24AF6FED00B857CE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B617F45924AF6FED00B857CE /* Assets.xcassets */; };
@@ -16,12 +15,12 @@
 		B617F46624AF705D00B857CE /* Transceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = B617F46524AF705D00B857CE /* Transceiver.swift */; };
 		B617F46924B0809800B857CE /* CodeLevelSupportRequest-20200704.txt in Resources */ = {isa = PBXBuildFile; fileRef = B617F46824B0809800B857CE /* CodeLevelSupportRequest-20200704.txt */; };
 		B617F46B24B0852C00B857CE /* FailureScenarios.txt in Resources */ = {isa = PBXBuildFile; fileRef = B617F46A24B0852C00B857CE /* FailureScenarios.txt */; };
+		B68458A024B0B45A00977292 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = B684589F24B0B45A00977292 /* Logger.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		B617F44D24AF6FE900B857CE /* C19X-iOS-BLE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "C19X-iOS-BLE.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B617F45024AF6FE900B857CE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		B617F45224AF6FE900B857CE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		B617F45424AF6FE900B857CE /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		B617F45724AF6FE900B857CE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		B617F45924AF6FED00B857CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -30,6 +29,7 @@
 		B617F46524AF705D00B857CE /* Transceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transceiver.swift; sourceTree = "<group>"; };
 		B617F46824B0809800B857CE /* CodeLevelSupportRequest-20200704.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "CodeLevelSupportRequest-20200704.txt"; sourceTree = "<group>"; };
 		B617F46A24B0852C00B857CE /* FailureScenarios.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = FailureScenarios.txt; sourceTree = "<group>"; };
+		B684589F24B0B45A00977292 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,12 +65,12 @@
 			children = (
 				B617F46424AF703F00B857CE /* Beacon */,
 				B617F45024AF6FE900B857CE /* AppDelegate.swift */,
-				B617F45224AF6FE900B857CE /* SceneDelegate.swift */,
 				B617F45424AF6FE900B857CE /* ViewController.swift */,
 				B617F45624AF6FE900B857CE /* Main.storyboard */,
 				B617F45924AF6FED00B857CE /* Assets.xcassets */,
 				B617F45B24AF6FED00B857CE /* LaunchScreen.storyboard */,
 				B617F45E24AF6FED00B857CE /* Info.plist */,
+				B684589F24B0B45A00977292 /* Logger.swift */,
 			);
 			path = "C19X-iOS-BLE";
 			sourceTree = "<group>";
@@ -165,10 +165,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B68458A024B0B45A00977292 /* Logger.swift in Sources */,
 				B617F45524AF6FE900B857CE /* ViewController.swift in Sources */,
 				B617F45124AF6FE900B857CE /* AppDelegate.swift in Sources */,
 				B617F46624AF705D00B857CE /* Transceiver.swift in Sources */,
-				B617F45324AF6FE900B857CE /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -315,7 +315,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 5NRR4P5W72;
 				INFOPLIST_FILE = "C19X-iOS-BLE/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -334,7 +334,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 5NRR4P5W72;
 				INFOPLIST_FILE = "C19X-iOS-BLE/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

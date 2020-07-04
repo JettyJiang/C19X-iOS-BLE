@@ -12,12 +12,12 @@ import os
 
 
 class Transceiver: NSObject {
-    private let log: OSLog
+    private let logger: Logger
     private let peripheralManager: PeripheralManager
     private let centralManager: CentralManager
 
     init(_ identifier: String, serviceUUID: CBUUID, code: BeaconCode) {
-        log = OSLog(subsystem: "Beacon", category: "Transceiver(" + identifier + ")")
+        logger = ConcreteLogger(subsystem: "Beacon", category: "Transceiver(" + identifier + ")")
         peripheralManager = PeripheralManager(identifier, serviceUUID: serviceUUID, code: code)
         centralManager = CentralManager(identifier, serviceUUIDs: [serviceUUID])
     }
@@ -26,18 +26,22 @@ class Transceiver: NSObject {
 typealias BeaconCode = Int64
 
 class CentralManager: NSObject {
-    private let log: OSLog
+    private let logger: Logger
     private let identifier: String
     private let centralManagerDelegate: CentralManagerDelegate
     private let dispatchQueue: DispatchQueue
     private let cbCentralManager: CBCentralManager
     open override var description: String { get {
-        return "<CentralManager-" + addressString + ":identifer=" + identifier + ",state=" + cbCentralManager.state.description + ">"
+        if #available(iOS 10.0, *) {
+            return "<CentralManager-" + addressString + ":identifer=" + identifier + ",state=" + cbCentralManager.state.description + ">"
+        } else {
+            return "<CentralManager-" + addressString + ":identifer=" + identifier + ",state=" + String(describing: cbCentralManager.state) + ">"
+        }
     }}
 
     init(_ identifier: String, serviceUUIDs: [CBUUID]) {
-        log = OSLog(subsystem: "Beacon", category: "CentralManager(" + identifier + ")")
-        os_log("init", log: log, type: .debug)
+        logger = ConcreteLogger(subsystem: "Beacon", category: "CentralManager(" + identifier + ")")
+        logger.log(.debug, "init")
         self.identifier = identifier
         self.centralManagerDelegate = CentralManagerDelegate(identifier, serviceUUIDs: serviceUUIDs)
         dispatchQueue = DispatchQueue(label: identifier)
@@ -52,27 +56,29 @@ class CentralManager: NSObject {
             cbCentralManager.stopScan()
         }
         cbCentralManager.delegate = nil
-        os_log("deinit", log: log, type: .debug)
+        logger.log(.debug, "deinit")
     }
     
     func scan() {
-        os_log("scan ==================================================", log: log, type: .debug)
+        logger.log(.debug, "scan ==================================================")
         centralManagerDelegate.centralManager(scan: cbCentralManager)
     }
 }
 
 class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
-    private let log: OSLog
+    private let logger: Logger
     private let identifier: String
     private let serviceUUIDs: [CBUUID]
+    private let dispatchQueue: DispatchQueue
     private var cbPeripherals: Set<CBPeripheral> = []
     private var cbCentralManager: CBCentralManager?
 
     init(_ identifier: String, serviceUUIDs: [CBUUID]) {
-        log = OSLog(subsystem: "Beacon", category: "CentralManager(" + identifier + ")")
-        os_log("init.delegate", log: log, type: .debug)
+        logger = ConcreteLogger(subsystem: "Beacon", category: "CentralManager(" + identifier + ")")
+        logger.log(.debug, "init.delegate")
         self.identifier = identifier
         self.serviceUUIDs = serviceUUIDs
+        self.dispatchQueue = DispatchQueue(label: identifier+".delegate")
     }
     
     deinit {
@@ -80,23 +86,23 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
             peripheral.delegate = nil
         }
         cbPeripherals.removeAll()
-        os_log("deinit.delegate (%s)", log: log, type: .debug, identifier)
+        logger.log(.debug, "deinit.delegate (\(identifier))")
     }
     
     func centralManager(_ central: CBCentralManager, willRestoreState dict: [String : Any]) {
-        os_log("willRestoreState (%s)", log: log, type: .debug, central.description)
+        logger.log(.debug, "willRestoreState (\(central.description))")
         cbCentralManager = central
         central.delegate = self
         if let restoredPeripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] {
             for peripheral in restoredPeripherals {
-                os_log("willRestoreState -> register (%s)", log: log, type: .debug, peripheral.description)
+                logger.log(.debug, "willRestoreState -> register (\(peripheral.description))")
                 centralManager(register: peripheral)
             }
         }
     }
 
     private func centralManager(register peripheral: CBPeripheral) {
-        os_log("register (%s)", log: log, type: .debug, peripheral.description)
+        logger.log(.debug, "register (\(peripheral.description))")
         peripheral.delegate = self
         cbPeripherals.insert(peripheral)
     }
@@ -104,77 +110,79 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         cbCentralManager = central
         guard central.state == .poweredOn else {
-            os_log("didUpdateState (%s)", log: self.log, type: .info, central.description)
+            logger.log(.info, "didUpdateState (\(central.description))")
             return
         }
-        os_log("didUpdateState (%s) -> scan", log: self.log, type: .debug, central.description)
+        logger.log(.debug, "didUpdateState (\(central.description)) -> scan")
         centralManager(scan: central)
     }
     
     open func centralManager(scan central: CBCentralManager) {
         guard central.state == .poweredOn else {
-            os_log("scan !poweredOn (%s)", log: log, type: .fault, central.description)
+            logger.log(.fault, "scan !poweredOn (\(central.description))")
             return
         }
-        os_log("scan -> didDiscover", log: log, type: .debug, central.description)
+        logger.log(.debug, "scan (\(central.description)) -> didDiscover")
         central.scanForPeripherals(withServices: serviceUUIDs)
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        os_log("didDiscover (%s) -> connect", log: log, type: .debug, peripheral.description)
+        logger.log(.debug, "didDiscover (\(peripheral.description)) -> connect")
         centralManager(central, connect: peripheral)
     }
 
-    func centralManager(_ central: CBCentralManager, connect peripheral: CBPeripheral) {
-        os_log("connect (%s) -> register, didConnect|didFailToConnect", log: log, type: .debug, peripheral.description)
+    private func centralManager(_ central: CBCentralManager, connect peripheral: CBPeripheral) {
+        logger.log(.debug, "connect (\(peripheral.description)) -> register, didConnect|didFailToConnect")
         centralManager(register: peripheral)
-        central.connect(peripheral)
+        dispatchQueue.asyncAfter(deadline: DispatchTime.now() + 1) {
+            central.connect(peripheral)
+        }
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        os_log("didConnect (%s) -> didReadRSSI", log: log, type: .debug, peripheral.description)
+        logger.log(.debug, "didConnect (\(peripheral.description)) -> didReadRSSI")
         peripheral.readRSSI()
     }
 
     func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
         if let error = error {
-            os_log("didReadRSSI (%s) !error (%s)", log: log, type: .fault, peripheral.description, error.localizedDescription)
+            logger.log(.fault, "didReadRSSI (\(peripheral.description)) !error (\(error.localizedDescription))")
             return
         }
         let rssi = RSSI.intValue
         guard let central = cbCentralManager else {
-            os_log("didReadRSSI (%s,rssi=%s) !noCentralManager", log: log, type: .fault, peripheral.description, rssi.description)
+            logger.log(.fault, "didReadRSSI (\(peripheral.description),rssi=\(rssi.description)) !noCentralManager")
             return
         }
-        os_log("didReadRSSI (%s,rssi=%s) -> disconnect", log: log, type: .debug, peripheral.description, rssi.description)
+        logger.log(.debug, "didReadRSSI (\(peripheral.description),rssi=\(rssi.description)) -> disconnect")
         centralManager(central, disconnect: peripheral)
     }
     
     private func centralManager(_ central: CBCentralManager, disconnect peripheral: CBPeripheral) {
-        os_log("disconnect (%s) -> didDisconnectPeripheral", log: log, type: .debug, peripheral.description)
+        logger.log(.debug, "disconnect (\(peripheral.description)) -> didDisconnectPeripheral")
         central.cancelPeripheralConnection(peripheral)
     }
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         if let error = error {
-            os_log("didDisconnectPeripheral (%s) !error (%s) -> connect", log: log, type: .fault, peripheral.description, error.localizedDescription)
+            logger.log(.fault, "didDisconnectPeripheral (\(peripheral.description)) !error (\(error.localizedDescription)) -> connect")
         } else {
-            os_log("didDisconnectPeripheral (%s) -> connect", log: log, type: .debug, peripheral.description)
+            logger.log(.debug, "didDisconnectPeripheral (\(peripheral.description)) -> connect")
         }
         centralManager(central, connect: peripheral)
     }
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         if let error = error {
-            os_log("didFailToConnect (%s) !error (%s) -> connect", log: log, type: .fault, peripheral.description, error.localizedDescription)
+            logger.log(.fault, "didFailToConnect (\(peripheral.description)) !error (\(error.localizedDescription)) -> connect")
         } else {
-            os_log("didFailToConnect (%s) -> connect", log: log, type: .debug, peripheral.description)
+            logger.log(.debug, "didFailToConnect (\(peripheral.description)) -> connect")
         }
         centralManager(central, connect: peripheral)
     }
     
     func centralManager(_ central: CBCentralManager, connectionEventDidOccur event: CBConnectionEvent, for peripheral: CBPeripheral) {
-        os_log("connectionEventDidOccur (%s,event=%s)", log: log, type: .debug, peripheral.description, event.description)
+        logger.log(.debug, "connectionEventDidOccur (\(peripheral.description),event=\(event.description))")
     }
 }
 
@@ -183,16 +191,20 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
 class PeripheralManager: NSObject {
     private let identifier: String
     private let peripheralManagerDelegate: PeripheralManagerDelegate
-    private let log: OSLog
+    private let logger: Logger
     private let dispatchQueue: DispatchQueue
     private let cbPeripheralManager: CBPeripheralManager
     open override var description: String { get {
-        return "<PeripheralManager-" + addressString + ":identifer=" + identifier + ",state=" + cbPeripheralManager.state.description + ">"
+        if #available(iOS 10.0, *) {
+            return "<PeripheralManager-" + addressString + ":identifer=" + identifier + ",state=" + cbPeripheralManager.state.description + ">"
+        } else {
+            return "<PeripheralManager-" + addressString + ":identifer=" + identifier + ",state=" + String(describing: cbPeripheralManager.state) + ">"
+        }
     }}
 
     init(_ identifier: String, serviceUUID: CBUUID, code: BeaconCode) {
-        log = OSLog(subsystem: "Beacon", category: "PeripheralManager(" + identifier + ")")
-        os_log("init (%s)", log: log, type: .debug, identifier)
+        logger = ConcreteLogger(subsystem: "Beacon", category: "PeripheralManager(" + identifier + ")")
+        logger.log(.debug, "init (\(identifier))")
         self.identifier = identifier
         self.peripheralManagerDelegate = PeripheralManagerDelegate(identifier, serviceUUID: serviceUUID, code: code)
         dispatchQueue = DispatchQueue(label: identifier)
@@ -207,7 +219,7 @@ class PeripheralManager: NSObject {
             cbPeripheralManager.stopAdvertising()
         }
         cbPeripheralManager.delegate = nil
-        os_log("deinit (%s)", log: log, type: .debug, identifier)
+        logger.log(.debug, "deinit (\(identifier))")
     }
 }
 
@@ -215,14 +227,14 @@ class PeripheralManagerDelegate: NSObject, CBPeripheralManagerDelegate {
     private let identifier: String
     private let serviceUUID: CBUUID
     private let code: BeaconCode
-    private let log: OSLog
+    private let logger: Logger
     private var cbCentrals: Set<CBCentral> = []
     private var cbMutableService: CBMutableService?
     private var cbMutableCharacteristic: CBMutableCharacteristic?
 
     init(_ identifier: String, serviceUUID: CBUUID, code: BeaconCode) {
-        log = OSLog(subsystem: "Beacon", category: "PeripheralManager(" + identifier + ")")
-        os_log("init.delegate", log: log, type: .debug)
+        logger = ConcreteLogger(subsystem: "Beacon", category: "PeripheralManager(" + identifier + ")")
+        logger.log(.debug, "init.delegate")
         self.identifier = identifier
         self.serviceUUID = serviceUUID
         self.code = code
@@ -232,11 +244,11 @@ class PeripheralManagerDelegate: NSObject, CBPeripheralManagerDelegate {
         cbMutableCharacteristic = nil
         cbMutableService = nil
         cbCentrals.removeAll()
-        os_log("deinit.delegate", log: log, type: .debug)
+        logger.log(.debug, "deinit.delegate")
     }
 
     func peripheralManager(_ peripheral: CBPeripheralManager, willRestoreState dict: [String : Any]) {
-        os_log("willRestoreState", log: log, type: .debug)
+        logger.log(.debug, "willRestoreState")
         peripheral.delegate = self
         if let services = dict[CBPeripheralManagerRestoredStateServicesKey] as? [CBMutableService] {
             for service in services {
@@ -245,7 +257,7 @@ class PeripheralManagerDelegate: NSObject, CBPeripheralManagerDelegate {
                         if characteristic.uuid.values.upper == serviceUUID.values.upper, let characteristic = characteristic as? CBMutableCharacteristic {
                             cbMutableService = service
                             cbMutableCharacteristic = characteristic
-                            os_log("willRestoreState -> restored (%s,%s)", log: log, type: .debug, service.description, characteristic.description)
+                            logger.log(.debug, "willRestoreState -> restored (\(service.description),\(characteristic.description))")
                         }
                     }
                 }
@@ -255,15 +267,15 @@ class PeripheralManagerDelegate: NSObject, CBPeripheralManagerDelegate {
 
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         guard peripheral.state == .poweredOn else {
-            os_log("didUpdateState (%s)", log: log, type: .info, peripheral.description)
+            logger.log(.info, "didUpdateState (\(peripheral.description))")
             return
         }
-        os_log("didUpdateState (%s) -> startAdvertising", log: log, type: .debug, peripheral.description)
+        logger.log(.debug, "didUpdateState (\(peripheral.description)) -> startAdvertising")
         peripheralManager(startAdvertising: peripheral)
     }
     
     private func peripheralManager(startAdvertising peripheral: CBPeripheralManager) {
-        os_log("startAdvertising (%s) -> didStartAdvertising", log: self.log, type: .debug, peripheral.description)
+        logger.log(.debug, "startAdvertising (\(peripheral.description)) -> didStartAdvertising")
         guard peripheral.state == .poweredOn else {
             return
         }
@@ -282,14 +294,14 @@ class PeripheralManagerDelegate: NSObject, CBPeripheralManagerDelegate {
     
     func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: Error?) {
         if let error = error {
-            os_log("didStartAdvertising !error (%s)", log: log, type: .fault, error.localizedDescription)
+            logger.log(.fault, "didStartAdvertising !error (\(error.localizedDescription))")
             return
         }
         guard let characteristic = cbMutableCharacteristic else {
-            os_log("didStartAdvertising !characteristic", log: log, type: .fault)
+            logger.log(.fault, "didStartAdvertising !characteristic")
             return
         }
-        os_log("didStartAdvertising (%s)", log: log, type: .debug, characteristic.description)
+        logger.log(.debug, "didStartAdvertising (\(characteristic.description))")
     }
 }
 
@@ -301,13 +313,21 @@ extension NSObject {
 
 extension CBCentralManager {
     open override var description: String { get {
-        return "<CBCentralManager-" + addressString + ":state=" + state.description + ">"
+        if #available(iOS 10.0, *) {
+            return "<CBCentralManager-" + addressString + ":state=" + state.description + ">"
+        } else {
+            return "<CBCentralManager-" + addressString + ":state=" + String(describing: state) + ">"
+        }
     }}
 }
 
 extension CBPeripheralManager {
     open override var description: String { get {
-        return "<CBPeripheralManager-" + addressString + ":state=" + state.description + ">"
+        if #available(iOS 10.0, *) {
+            return "<CBPeripheralManager-" + addressString + ":state=" + state.description + ">"
+        } else {
+            return "<CBPeripheralManager-" + addressString + ":state=" + String(describing: state) + ">"
+        }
     }}
 }
 
@@ -356,6 +376,7 @@ extension CBConnectionEvent {
     }}
 }
 
+@available(iOS 10.0, *)
 extension CBManagerState: CustomStringConvertible {
     public var description: String {
         switch self {
