@@ -69,6 +69,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
     private let logger: Logger
     private let identifier: String
     private let serviceUUIDs: [CBUUID]
+    private let loopDelay = TimeInterval(2)
     private let dispatchQueue: DispatchQueue
     private var cbPeripherals: Set<CBPeripheral> = []
     private var cbCentralManager: CBCentralManager?
@@ -134,7 +135,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
     private func centralManager(_ central: CBCentralManager, connect peripheral: CBPeripheral) {
         logger.log(.debug, "connect (\(peripheral.description)) -> register, didConnect|didFailToConnect")
         centralManager(register: peripheral)
-        dispatchQueue.asyncAfter(deadline: DispatchTime.now() + 1) {
+        dispatchQueue.asyncAfter(deadline: DispatchTime.now() + loopDelay) {
             central.connect(peripheral)
         }
     }
