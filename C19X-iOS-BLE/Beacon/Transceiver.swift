@@ -9,6 +9,7 @@
 import Foundation
 import CoreBluetooth
 import CoreLocation
+import UIKit
 import os
 
 
@@ -17,12 +18,15 @@ class Transceiver: NSObject, CLLocationManagerDelegate {
     private let peripheralManager: PeripheralManager
     private let centralManager: CentralManager
     private let locationManager: LocationManager
+    private let notificationManager: NotificationManager
 
     init(_ identifier: String, serviceUUID: CBUUID, code: BeaconCode, database: Database) {
         logger = ConcreteLogger(subsystem: "Beacon", category: "Transceiver(" + identifier + ")")
         peripheralManager = PeripheralManager(identifier, serviceUUID: serviceUUID, code: code)
         centralManager = CentralManager(identifier, serviceUUIDs: [serviceUUID], database: database)
-        locationManager = LocationManager(identifier)
+        locationManager = LocationManager()
+        notificationManager = NotificationManager(identifier)
+        notificationManager.notification("C19X-iOS-BLE", "Active", delay: 180, repeats: true)
     }
 }
 
@@ -33,30 +37,64 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
     private let region = CLBeaconRegion(proximityUUID: UUID(uuidString: "2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6")!, identifier: "iBeacon")
     
-    init(_ identifier: String) {
-        logger = ConcreteLogger(subsystem: "Beacon", category: "LocationManager(" + identifier + ")")
+    override init() {
+        logger = ConcreteLogger(subsystem: "Beacon", category: "LocationManager")
         logger.log(.debug, "init")
         super.init()
         locationManager.delegate = self
         locationManager.requestAlwaysAuthorization()
         locationManager.pausesLocationUpdatesAutomatically = false
-        locationManager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
-        locationManager.distanceFilter = 3000.0
         if #available(iOS 9.0, *) {
           locationManager.allowsBackgroundLocationUpdates = true
         }
-        locationManager.startUpdatingLocation()
         locationManager.startRangingBeacons(in: region)
     }
     
     deinit {
-        locationManager.stopUpdatingLocation()
         locationManager.stopRangingBeacons(in: region)
         logger.log(.debug, "deinit")
     }
+}
+
+class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
+    private let logger: Logger
+    private let identifier: String
     
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        logger.log(.debug, "didUpdateLocations (\(locations.description))")
+    init(_ identifier: String) {
+        logger = ConcreteLogger(subsystem: "Beacon", category: "NotificationManager(" + identifier + ")")
+        self.identifier = identifier
+    }
+
+    func notification(_ title: String, _ body: String, delay: TimeInterval, repeats: Bool) {
+        if #available(iOS 10.0, *) {
+            notification10(title, body, delay: delay, repeats: repeats)
+        }
+    }
+    
+    @available(iOS 10.0, *)
+    private func notification10(_ title: String, _ body: String, delay: TimeInterval, repeats: Bool) {
+        DispatchQueue.main.async {
+            // Request authorisation for notification
+            let center = UNUserNotificationCenter.current()
+            center.requestAuthorization(options: [.alert]) { granted, error in
+                if let error = error {
+                    self.logger.log(.fault, "notification denied, authorisation failed (error=\(error.localizedDescription))")
+                } else if granted {
+                    let identifier = "C19X-iOS-BLE.notification"
+                    let content = UNMutableNotificationContent()
+                    content.title = title
+                    content.body = body
+                    content.sound = UNNotificationSound.default
+                    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: repeats)
+                    center.removePendingNotificationRequests(withIdentifiers: [identifier])
+                    let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+                    center.add(request)
+                    self.logger.log(.debug, "notification (title=\(title),message=\(body))")
+                } else {
+                    self.logger.log(.fault, "notification denied, authorisation denied")
+                }
+            }
+        }
     }
 }
 
