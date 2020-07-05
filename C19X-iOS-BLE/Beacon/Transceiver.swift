@@ -18,10 +18,10 @@ class Transceiver: NSObject, CLLocationManagerDelegate {
     private let centralManager: CentralManager
     private let locationManager: LocationManager
 
-    init(_ identifier: String, serviceUUID: CBUUID, code: BeaconCode) {
+    init(_ identifier: String, serviceUUID: CBUUID, code: BeaconCode, database: Database) {
         logger = ConcreteLogger(subsystem: "Beacon", category: "Transceiver(" + identifier + ")")
         peripheralManager = PeripheralManager(identifier, serviceUUID: serviceUUID, code: code)
-        centralManager = CentralManager(identifier, serviceUUIDs: [serviceUUID])
+        centralManager = CentralManager(identifier, serviceUUIDs: [serviceUUID], database: database)
         locationManager = LocationManager(identifier)
     }
 }
@@ -74,11 +74,11 @@ class CentralManager: NSObject {
         }
     }}
 
-    init(_ identifier: String, serviceUUIDs: [CBUUID]) {
+    init(_ identifier: String, serviceUUIDs: [CBUUID], database: Database) {
         logger = ConcreteLogger(subsystem: "Beacon", category: "CentralManager(" + identifier + ")")
         logger.log(.debug, "init")
         self.identifier = identifier
-        self.centralManagerDelegate = CentralManagerDelegate(identifier, serviceUUIDs: serviceUUIDs)
+        self.centralManagerDelegate = CentralManagerDelegate(identifier, serviceUUIDs: serviceUUIDs, database: database)
         dispatchQueue = DispatchQueue(label: identifier)
         cbCentralManager = CBCentralManager(delegate: centralManagerDelegate, queue: dispatchQueue, options: [
             CBCentralManagerOptionRestoreIdentifierKey : identifier,
@@ -93,27 +93,24 @@ class CentralManager: NSObject {
         cbCentralManager.delegate = nil
         logger.log(.debug, "deinit")
     }
-    
-    func scan() {
-        logger.log(.debug, "scan ==================================================")
-        centralManagerDelegate.centralManager(scan: cbCentralManager)
-    }
 }
 
 class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private let logger: Logger
     private let identifier: String
     private let serviceUUIDs: [CBUUID]
+    private let database: Database
     private let loopDelay = TimeInterval(2)
     private let dispatchQueue: DispatchQueue
     private var cbPeripherals: Set<CBPeripheral> = []
     private var cbCentralManager: CBCentralManager?
 
-    init(_ identifier: String, serviceUUIDs: [CBUUID]) {
+    init(_ identifier: String, serviceUUIDs: [CBUUID], database: Database) {
         logger = ConcreteLogger(subsystem: "Beacon", category: "CentralManager(" + identifier + ")")
         logger.log(.debug, "init.delegate")
         self.identifier = identifier
         self.serviceUUIDs = serviceUUIDs
+        self.database = database
         self.dispatchQueue = DispatchQueue(label: identifier+".delegate")
     }
     
@@ -159,11 +156,13 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
             return
         }
         logger.log(.debug, "scan (\(central.description)) -> didDiscover")
+        database.insert("scan")
         central.scanForPeripherals(withServices: serviceUUIDs)
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         logger.log(.debug, "didDiscover (\(peripheral.description)) -> connect")
+        database.insert("didDiscover  (\(peripheral.description))")
         centralManager(central, connect: peripheral)
     }
 
@@ -191,6 +190,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
             return
         }
         logger.log(.debug, "didReadRSSI (\(peripheral.description),rssi=\(rssi.description)) -> disconnect")
+        database.insert("didReadRSSI (\(peripheral.description),rssi=\(rssi.description))")
         centralManager(central, disconnect: peripheral)
     }
     
@@ -205,6 +205,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
         } else {
             logger.log(.debug, "didDisconnectPeripheral (\(peripheral.description)) -> connect")
         }
+        database.insert("didDisconnectPeripheral  (\(peripheral.description))")
         centralManager(central, connect: peripheral)
     }
 
@@ -214,6 +215,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
         } else {
             logger.log(.debug, "didFailToConnect (\(peripheral.description)) -> connect")
         }
+        database.insert("didFailToConnect  (\(peripheral.description))")
         centralManager(central, connect: peripheral)
     }
     

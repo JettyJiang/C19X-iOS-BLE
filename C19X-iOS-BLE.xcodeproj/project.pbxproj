@@ -16,6 +16,8 @@
 		B617F46924B0809800B857CE /* CodeLevelSupportRequest-20200704.txt in Resources */ = {isa = PBXBuildFile; fileRef = B617F46824B0809800B857CE /* CodeLevelSupportRequest-20200704.txt */; };
 		B617F46B24B0852C00B857CE /* FailureScenarios.txt in Resources */ = {isa = PBXBuildFile; fileRef = B617F46A24B0852C00B857CE /* FailureScenarios.txt */; };
 		B68458A024B0B45A00977292 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = B684589F24B0B45A00977292 /* Logger.swift */; };
+		B6ABDA0524B241ED00DF4E00 /* C19X-iOS-BLE.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B6ABDA0324B241ED00DF4E00 /* C19X-iOS-BLE.xcdatamodeld */; };
+		B6ABDA0824B242C600DF4E00 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6ABDA0724B242C600DF4E00 /* Database.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +32,9 @@
 		B617F46824B0809800B857CE /* CodeLevelSupportRequest-20200704.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "CodeLevelSupportRequest-20200704.txt"; sourceTree = "<group>"; };
 		B617F46A24B0852C00B857CE /* FailureScenarios.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = FailureScenarios.txt; sourceTree = "<group>"; };
 		B684589F24B0B45A00977292 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		B6ABDA0424B241ED00DF4E00 /* C19X-iOS-BLE.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "C19X-iOS-BLE.xcdatamodel"; sourceTree = "<group>"; };
+		B6ABDA0724B242C600DF4E00 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
+		B6ABDA0924B2528400DF4E00 /* C19X-iOS-BLE.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "C19X-iOS-BLE.entitlements"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,6 +51,7 @@
 		B617F44424AF6FE800B857CE = {
 			isa = PBXGroup;
 			children = (
+				B6ABDA0324B241ED00DF4E00 /* C19X-iOS-BLE.xcdatamodeld */,
 				B617F44F24AF6FE900B857CE /* C19X-iOS-BLE */,
 				B617F44E24AF6FE900B857CE /* Products */,
 				B617F46724B0807000B857CE /* Documents */,
@@ -63,6 +69,8 @@
 		B617F44F24AF6FE900B857CE /* C19X-iOS-BLE */ = {
 			isa = PBXGroup;
 			children = (
+				B6ABDA0924B2528400DF4E00 /* C19X-iOS-BLE.entitlements */,
+				B6ABDA0624B242BA00DF4E00 /* Data */,
 				B617F46424AF703F00B857CE /* Beacon */,
 				B617F45024AF6FE900B857CE /* AppDelegate.swift */,
 				B617F45424AF6FE900B857CE /* ViewController.swift */,
@@ -90,6 +98,14 @@
 				B617F46A24B0852C00B857CE /* FailureScenarios.txt */,
 			);
 			path = Documents;
+			sourceTree = "<group>";
+		};
+		B6ABDA0624B242BA00DF4E00 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				B6ABDA0724B242C600DF4E00 /* Database.swift */,
+			);
+			path = Data;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -165,7 +181,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6ABDA0824B242C600DF4E00 /* Database.swift in Sources */,
 				B68458A024B0B45A00977292 /* Logger.swift in Sources */,
+				B6ABDA0524B241ED00DF4E00 /* C19X-iOS-BLE.xcdatamodeld in Sources */,
 				B617F45524AF6FE900B857CE /* ViewController.swift in Sources */,
 				B617F45124AF6FE900B857CE /* AppDelegate.swift in Sources */,
 				B617F46624AF705D00B857CE /* Transceiver.swift in Sources */,
@@ -312,6 +330,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "C19X-iOS-BLE/C19X-iOS-BLE.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 5NRR4P5W72;
 				INFOPLIST_FILE = "C19X-iOS-BLE/Info.plist";
@@ -331,6 +350,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "C19X-iOS-BLE/C19X-iOS-BLE.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 5NRR4P5W72;
 				INFOPLIST_FILE = "C19X-iOS-BLE/Info.plist";
@@ -368,6 +388,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		B6ABDA0324B241ED00DF4E00 /* C19X-iOS-BLE.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				B6ABDA0424B241ED00DF4E00 /* C19X-iOS-BLE.xcdatamodel */,
+			);
+			currentVersion = B6ABDA0424B241ED00DF4E00 /* C19X-iOS-BLE.xcdatamodel */;
+			path = "C19X-iOS-BLE.xcdatamodeld";
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = B617F44524AF6FE800B857CE /* Project object */;
 }
