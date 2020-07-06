@@ -35,7 +35,7 @@ typealias BeaconCode = Int64
 class LocationManager: NSObject, CLLocationManagerDelegate {
     private let logger: Logger
     private let locationManager = CLLocationManager()
-    private let region = CLBeaconRegion(proximityUUID: UUID(uuidString: "2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6")!, identifier: "iBeacon")
+    private let uuid = UUID(uuidString: "2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6")!
     
     override init() {
         logger = ConcreteLogger(subsystem: "Beacon", category: "LocationManager")
@@ -50,12 +50,20 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
           locationManager.allowsBackgroundLocationUpdates = true
         }
         locationManager.startUpdatingLocation()
-        locationManager.startRangingBeacons(in: region)
+        if #available(iOS 13.0, *) {
+            locationManager.startRangingBeacons(satisfying: CLBeaconIdentityConstraint(uuid: uuid))
+        } else {
+            locationManager.startRangingBeacons(in: CLBeaconRegion(proximityUUID: uuid, identifier: "iBeacon"))
+        }
     }
     
     deinit {
+        if #available(iOS 13.0, *) {
+            locationManager.stopRangingBeacons(satisfying: CLBeaconIdentityConstraint(uuid: uuid))
+        } else {
+            locationManager.stopRangingBeacons(in: CLBeaconRegion(proximityUUID: uuid, identifier: "iBeacon"))
+        }
         locationManager.stopUpdatingLocation()
-        locationManager.stopRangingBeacons(in: region)
         logger.log(.debug, "deinit")
     }
 }
