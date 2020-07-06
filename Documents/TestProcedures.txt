@@ -1,0 +1,6 @@
+2020-07-06 : Initial discovery : iOS(S)-iOS(S)
+1. Phone A and B, uninstall app, airplane mode ON
+2. Phone A, airplane mode OFF, install app, app to background, confirm advert in Xcode, disconnect from Xcode, place in faraday bag
+3. Phone B, airplane mode OFF, install app, app to background, confirm advert in Xcode
+4. Phone A, out of faraday bag, expect no change on B if its screen is OFF
+5. Phone B, touch display or wait for notification, screen ON, expect discovery of A

@@ -44,13 +44,17 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         locationManager.delegate = self
         locationManager.requestAlwaysAuthorization()
         locationManager.pausesLocationUpdatesAutomatically = false
+        locationManager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
+        locationManager.distanceFilter = 3000.0
         if #available(iOS 9.0, *) {
           locationManager.allowsBackgroundLocationUpdates = true
         }
+        locationManager.startUpdatingLocation()
         locationManager.startRangingBeacons(in: region)
     }
     
     deinit {
+        locationManager.stopUpdatingLocation()
         locationManager.stopRangingBeacons(in: region)
         logger.log(.debug, "deinit")
     }

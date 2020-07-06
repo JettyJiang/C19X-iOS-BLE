@@ -18,6 +18,7 @@
 		B68458A024B0B45A00977292 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = B684589F24B0B45A00977292 /* Logger.swift */; };
 		B6ABDA0524B241ED00DF4E00 /* C19X-iOS-BLE.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B6ABDA0324B241ED00DF4E00 /* C19X-iOS-BLE.xcdatamodeld */; };
 		B6ABDA0824B242C600DF4E00 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6ABDA0724B242C600DF4E00 /* Database.swift */; };
+		B6ABDA0F24B3243600DF4E00 /* TestProcedures.txt in Resources */ = {isa = PBXBuildFile; fileRef = B6ABDA0E24B3243600DF4E00 /* TestProcedures.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +36,7 @@
 		B6ABDA0424B241ED00DF4E00 /* C19X-iOS-BLE.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "C19X-iOS-BLE.xcdatamodel"; sourceTree = "<group>"; };
 		B6ABDA0724B242C600DF4E00 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
 		B6ABDA0924B2528400DF4E00 /* C19X-iOS-BLE.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "C19X-iOS-BLE.entitlements"; sourceTree = "<group>"; };
+		B6ABDA0E24B3243600DF4E00 /* TestProcedures.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = TestProcedures.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,6 +98,7 @@
 			children = (
 				B617F46824B0809800B857CE /* CodeLevelSupportRequest-20200704.txt */,
 				B617F46A24B0852C00B857CE /* FailureScenarios.txt */,
+				B6ABDA0E24B3243600DF4E00 /* TestProcedures.txt */,
 			);
 			path = Documents;
 			sourceTree = "<group>";
@@ -166,6 +169,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6ABDA0F24B3243600DF4E00 /* TestProcedures.txt in Resources */,
 				B617F45D24AF6FED00B857CE /* LaunchScreen.storyboard in Resources */,
 				B617F46B24B0852C00B857CE /* FailureScenarios.txt in Resources */,
 				B617F45A24AF6FED00B857CE /* Assets.xcassets in Resources */,
