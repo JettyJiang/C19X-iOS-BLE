@@ -41,3 +41,14 @@
 6. Bring app on B to foreground, B shows no change
 7. A out of faraday bag, B shows no change
 8. Bring app on A or B to foreground, B shows didDiscover and resumes loop, where A has new identifier (uuid)
+
+2020-07-05 : iOS-iOS background non-detection despite BLE stack being fully operational
+1. Phone A and B, uninstall app, airplane mode ON
+2. Phone A, airplane mode OFF, install app, background, confirm advertising, disconnect from Xcode, place in faraday bag
+3. Phone B, airplane mode OFF, install app, background, confirm advertising, keep connected to Xcode
+4. Wait 30 minutes, Phone A out of faraday bag, expect B not to detect A
+5. Phone C (android), run sniffer app, expect to detect both A and B adverts
+6. Phone A in faraday bag
+7. Phone C (android), run advert app, expect B to detect C
+8. Phone A out of faraday bag, expect B not to detect A but detect C
+
