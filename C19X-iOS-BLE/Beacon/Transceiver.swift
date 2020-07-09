@@ -8,22 +8,107 @@
 
 import Foundation
 import CoreBluetooth
+import CoreLocation
+import UIKit
 import os
 
 
-class Transceiver: NSObject {
+class Transceiver: NSObject, CLLocationManagerDelegate {
     private let logger: Logger
     private let peripheralManager: PeripheralManager
     private let centralManager: CentralManager
+    private let locationManager: LocationManager
+    private let notificationManager: NotificationManager
 
-    init(_ identifier: String, serviceUUID: CBUUID, code: BeaconCode) {
+    init(_ identifier: String, serviceUUID: CBUUID, code: BeaconCode, database: Database) {
         logger = ConcreteLogger(subsystem: "Beacon", category: "Transceiver(" + identifier + ")")
         peripheralManager = PeripheralManager(identifier, serviceUUID: serviceUUID, code: code)
-        centralManager = CentralManager(identifier, serviceUUIDs: [serviceUUID])
+        centralManager = CentralManager(identifier, serviceUUIDs: [serviceUUID], database: database)
+        locationManager = LocationManager()
+        notificationManager = NotificationManager(identifier)
+        notificationManager.notification("C19X-iOS-BLE", "Active", delay: 60, repeats: true)
     }
 }
 
 typealias BeaconCode = Int64
+
+class LocationManager: NSObject, CLLocationManagerDelegate {
+    private let logger: Logger
+    private let locationManager = CLLocationManager()
+    private let uuid = UUID(uuidString: "2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6")!
+    
+    override init() {
+        logger = ConcreteLogger(subsystem: "Beacon", category: "LocationManager")
+        logger.log(.debug, "init")
+        super.init()
+        locationManager.delegate = self
+        locationManager.requestAlwaysAuthorization()
+        locationManager.pausesLocationUpdatesAutomatically = false
+        locationManager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
+        locationManager.distanceFilter = 3000.0
+        if #available(iOS 9.0, *) {
+          locationManager.allowsBackgroundLocationUpdates = true
+        }
+        locationManager.startUpdatingLocation()
+        if #available(iOS 13.0, *) {
+            locationManager.startRangingBeacons(satisfying: CLBeaconIdentityConstraint(uuid: uuid))
+        } else {
+            locationManager.startRangingBeacons(in: CLBeaconRegion(proximityUUID: uuid, identifier: "iBeacon"))
+        }
+    }
+    
+    deinit {
+        if #available(iOS 13.0, *) {
+            locationManager.stopRangingBeacons(satisfying: CLBeaconIdentityConstraint(uuid: uuid))
+        } else {
+            locationManager.stopRangingBeacons(in: CLBeaconRegion(proximityUUID: uuid, identifier: "iBeacon"))
+        }
+        locationManager.stopUpdatingLocation()
+        logger.log(.debug, "deinit")
+    }
+}
+
+class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
+    private let logger: Logger
+    private let identifier: String
+    
+    init(_ identifier: String) {
+        logger = ConcreteLogger(subsystem: "Beacon", category: "NotificationManager(" + identifier + ")")
+        self.identifier = identifier
+    }
+
+    func notification(_ title: String, _ body: String, delay: TimeInterval, repeats: Bool) {
+        if #available(iOS 10.0, *) {
+            notification10(title, body, delay: delay, repeats: repeats)
+        }
+    }
+    
+    @available(iOS 10.0, *)
+    private func notification10(_ title: String, _ body: String, delay: TimeInterval, repeats: Bool) {
+        DispatchQueue.main.async {
+            // Request authorisation for notification
+            let center = UNUserNotificationCenter.current()
+            center.requestAuthorization(options: [.alert]) { granted, error in
+                if let error = error {
+                    self.logger.log(.fault, "notification denied, authorisation failed (error=\(error.localizedDescription))")
+                } else if granted {
+                    let identifier = "C19X-iOS-BLE.notification"
+                    let content = UNMutableNotificationContent()
+                    content.title = title
+                    content.body = body
+                    content.sound = UNNotificationSound.default
+                    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: repeats)
+                    center.removePendingNotificationRequests(withIdentifiers: [identifier])
+                    let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+                    center.add(request)
+                    self.logger.log(.debug, "notification (title=\(title),message=\(body))")
+                } else {
+                    self.logger.log(.fault, "notification denied, authorisation denied")
+                }
+            }
+        }
+    }
+}
 
 class CentralManager: NSObject {
     private let logger: Logger
@@ -39,11 +124,11 @@ class CentralManager: NSObject {
         }
     }}
 
-    init(_ identifier: String, serviceUUIDs: [CBUUID]) {
+    init(_ identifier: String, serviceUUIDs: [CBUUID], database: Database) {
         logger = ConcreteLogger(subsystem: "Beacon", category: "CentralManager(" + identifier + ")")
         logger.log(.debug, "init")
         self.identifier = identifier
-        self.centralManagerDelegate = CentralManagerDelegate(identifier, serviceUUIDs: serviceUUIDs)
+        self.centralManagerDelegate = CentralManagerDelegate(identifier, serviceUUIDs: serviceUUIDs, database: database)
         dispatchQueue = DispatchQueue(label: identifier)
         cbCentralManager = CBCentralManager(delegate: centralManagerDelegate, queue: dispatchQueue, options: [
             CBCentralManagerOptionRestoreIdentifierKey : identifier,
@@ -58,27 +143,24 @@ class CentralManager: NSObject {
         cbCentralManager.delegate = nil
         logger.log(.debug, "deinit")
     }
-    
-    func scan() {
-        logger.log(.debug, "scan ==================================================")
-        centralManagerDelegate.centralManager(scan: cbCentralManager)
-    }
 }
 
 class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private let logger: Logger
     private let identifier: String
     private let serviceUUIDs: [CBUUID]
+    private let database: Database
     private let loopDelay = TimeInterval(2)
     private let dispatchQueue: DispatchQueue
     private var cbPeripherals: Set<CBPeripheral> = []
     private var cbCentralManager: CBCentralManager?
 
-    init(_ identifier: String, serviceUUIDs: [CBUUID]) {
+    init(_ identifier: String, serviceUUIDs: [CBUUID], database: Database) {
         logger = ConcreteLogger(subsystem: "Beacon", category: "CentralManager(" + identifier + ")")
         logger.log(.debug, "init.delegate")
         self.identifier = identifier
         self.serviceUUIDs = serviceUUIDs
+        self.database = database
         self.dispatchQueue = DispatchQueue(label: identifier+".delegate")
     }
     
@@ -124,11 +206,13 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
             return
         }
         logger.log(.debug, "scan (\(central.description)) -> didDiscover")
+        database.insert("scan")
         central.scanForPeripherals(withServices: serviceUUIDs)
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         logger.log(.debug, "didDiscover (\(peripheral.description)) -> connect")
+        database.insert("didDiscover  (\(peripheral.description))")
         centralManager(central, connect: peripheral)
     }
 
@@ -156,6 +240,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
             return
         }
         logger.log(.debug, "didReadRSSI (\(peripheral.description),rssi=\(rssi.description)) -> disconnect")
+        database.insert("didReadRSSI (\(peripheral.description),rssi=\(rssi.description))")
         centralManager(central, disconnect: peripheral)
     }
     
@@ -170,6 +255,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
         } else {
             logger.log(.debug, "didDisconnectPeripheral (\(peripheral.description)) -> connect")
         }
+        database.insert("didDisconnectPeripheral  (\(peripheral.description))")
         centralManager(central, connect: peripheral)
     }
 
@@ -179,6 +265,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
         } else {
             logger.log(.debug, "didFailToConnect (\(peripheral.description)) -> connect")
         }
+        database.insert("didFailToConnect  (\(peripheral.description))")
         centralManager(central, connect: peripheral)
     }
     

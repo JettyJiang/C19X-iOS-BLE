@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import os
 
 protocol Logger {
     init(subsystem: String, category: String)
@@ -21,13 +22,34 @@ enum LogLevel: String {
 class ConcreteLogger: NSObject, Logger {
     private let subsystem: String
     private let category: String
+    private let log: OSLog?
     
     required init(subsystem: String, category: String) {
         self.subsystem = subsystem
         self.category = category
+        if #available(iOS 10.0, *) {
+            log = OSLog(subsystem: subsystem, category: category)
+        } else {
+            log = nil
+        }
     }
 
     func log(_ level: LogLevel, _ message: String) {
-        print(Date().description + " [" + subsystem + "] [" + category + "] : " + message)
+        guard let log = log else {
+            let entry = Date().description + " [" + subsystem + "] [" + category + "] : " + message
+            print(entry)
+            return
+        }
+        if #available(iOS 10.0, *) {
+            switch (level) {
+            case .debug:
+                os_log("%s", log: log, type: .debug, message)
+            case .info:
+                os_log("%s", log: log, type: .info, message)
+            case .fault:
+                os_log("%s", log: log, type: .fault, message)
+            }
+            return
+        }
     }
 }

@@ -1,0 +1,15 @@
+2020-07-06 : Initial discovery : iOS(S)-iOS(S)
+1. Phone A and B, uninstall app, airplane mode ON
+2. Phone A, airplane mode OFF, install app, app to background, confirm advert in Xcode, disconnect from Xcode, place in faraday bag
+3. Phone B, airplane mode OFF, install app, app to background, confirm advert in Xcode
+4. Phone A, out of faraday bag, expect no change on B if its screen is OFF
+5. Phone B, touch display or wait for notification, screen ON, expect discovery of A
+
+2020-07-06 : Automatic screen ON
+1. Phone A and B, uninstall app, airplane mode ON
+2. Phone A has front cover, Phone B (iPhone X) has bluetac covering notch to simulate front cover ON and in pocket.
+3. Phone A, airplane mode OFF, install app, app to background, confirm advert in Xcode, disconnect from Xcode, front cover ON, place in faraday bag
+4. Phone B, airplane mode OFF, install app, app to background, confirm advert in Xcode
+5. Wait to confirm Phone B screen ON at regular intervals from repeating notification, expect Phone B to show notifications
+6. Phone A, out of faraday bag, wait for Phone B to show notification and screen ON, expect discovery of A
+
