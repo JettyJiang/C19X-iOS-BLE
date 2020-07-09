@@ -26,7 +26,7 @@ class Transceiver: NSObject, CLLocationManagerDelegate {
         centralManager = CentralManager(identifier, serviceUUIDs: [serviceUUID], database: database)
         locationManager = LocationManager()
         notificationManager = NotificationManager(identifier)
-        notificationManager.notification("C19X-iOS-BLE", "Active", delay: 180, repeats: true)
+        notificationManager.notification("C19X-iOS-BLE", "Active", delay: 60, repeats: true)
     }
 }
 
