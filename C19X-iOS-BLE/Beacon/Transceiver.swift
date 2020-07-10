@@ -179,10 +179,10 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
         logger.log(.debug, "init.delegate")
         self.identifier = identifier
         self.serviceUUID = serviceUUID
-//        let ancsServiceUUID = CBUUID(string: "7905F431-B5CE-4E99-A40F-4B1E122D00D0")
-//        let mediaServiceUUID = CBUUID(string: "89d3502b-0f36-433a-8ef4-c502ad55f8dc")
-//        let continuityServiceUUID = CBUUID(string: "d0611e78-bbb4-4591-a5f8-487910ae4366")
-        self.serviceUUIDs = [serviceUUID] //, ancsServiceUUID, mediaServiceUUID, continuityServiceUUID]
+        let ancsServiceUUID = CBUUID(string: "7905F431-B5CE-4E99-A40F-4B1E122D00D0")
+        let mediaServiceUUID = CBUUID(string: "89d3502b-0f36-433a-8ef4-c502ad55f8dc")
+        let continuityServiceUUID = CBUUID(string: "d0611e78-bbb4-4591-a5f8-487910ae4366")
+        self.serviceUUIDs = [serviceUUID, ancsServiceUUID, mediaServiceUUID, continuityServiceUUID]
         self.database = database
         self.dispatchQueue = DispatchQueue(label: identifier+".delegate")
     }
@@ -402,18 +402,8 @@ class PeripheralManagerDelegate: NSObject, CBPeripheralManagerDelegate {
         service.characteristics = [characteristic]
         peripheral.stopAdvertising()
         peripheral.removeAllServices()
-        
-        let proximityUUID = UUID(uuidString: beaconCharacteristicCBUUID.uuidString)
-        let beaconID = beaconCharacteristicCBUUID.uuidString
-        let beaconRegion = CLBeaconRegion(proximityUUID: proximityUUID!, major: CLBeaconMajorValue(1), minor: CLBeaconMinorValue(1), identifier: beaconID)
-        let beaconAdvert = (beaconRegion.peripheralData(withMeasuredPower: nil) as NSDictionary) as! [String : Any]
-        var advert : [String : Any] = [:]
-        advert["kCBAdvDataAppleBeaconKey"] = beaconAdvert["kCBAdvDataAppleBeaconKey"]
-        advert[CBAdvertisementDataServiceUUIDsKey] = [serviceUUID]
-        peripheral.startAdvertising(advert)
-        logger.log(.debug, "startAdvertising (advert=\(advert.description))")
-//        peripheral.add(service)
-//        peripheral.startAdvertising([CBAdvertisementDataServiceUUIDsKey : [serviceUUID]])
+        peripheral.add(service)
+        peripheral.startAdvertising([CBAdvertisementDataServiceUUIDsKey : [serviceUUID]])
         cbMutableService = service
         cbMutableCharacteristic = characteristic
     }
