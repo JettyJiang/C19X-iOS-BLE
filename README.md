@@ -24,6 +24,17 @@ Detection is non-trivial when both iOS devices are in background mode, which is 
 
 This C19X-iOS-BLE code repository was created specifically to investigate and solve this iOS central - iOS peripheral reconnection problem, which is the final challenge in creating a Bluetooth beacon that runs indefinitely for iOS and Android devices in all states. Special thanks to @UsamaAbdulAziz who has given many days to support this investigation and help solve this complex problem by providing invaluable encouragement, feedback and observations from numerous systematic and practical tests.
 
+## Limitations
+Current solution for iOS Central - iOS Peripheral detection relies on screen activation (display is lit) to trigger discovery while app is in background mode. When the app is in background mode, screen off, device locked, it will track a discovered and connected device indefinitely and reconnect following short periods of being out of range (roughly < 20 minutes), however it will not discover new devices in this condition. Discovery will resume whenever the display is lit, e.g. while phone is unlocked and being used normally, or phone is locked and a notification is being displayed.
+
+In practice, that means a device with an Apple folio case or 3rd party folio/flip case that supports Lock/Unlock (has magnets) will not detect new devices when the case is closed and being carried in a pocket or bag. Discovery will resume when:
+
+1. Phone is taken out of pocket and case opened (can remain locked). Any pending notification will immediately trigger screen on and discovery.
+2. Phone is taken out of pocket, case opened and screen on triggered manually (e.g. tapping the display or pressing any button).
+3. Phone is unlocked and being used normally.
+
+Alternatively, discovery can be triggered automatically at regular intervals if the phone is either not in a covered case or the cover is open and device left face up or at an angle on a surface (i.e. not face down). A repeating local notification will automatically trigger screen on for short periods at regular intervals to trigger discovery.
+
 ## Problem definition
 Abbreviations for app state
 - F = Foreground
