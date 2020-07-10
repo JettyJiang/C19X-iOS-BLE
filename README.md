@@ -1,4 +1,4 @@
-# C19X-iOS-BLE [SOLVED]
+# C19X-iOS-BLE
 An investigation into options for resuming beacon tracking for iOS devices in background mode after going out of range for long periods. 
 
 ## Solution
