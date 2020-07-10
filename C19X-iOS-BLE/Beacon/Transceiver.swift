@@ -18,15 +18,15 @@ class Transceiver: NSObject, CLLocationManagerDelegate {
     private let peripheralManager: PeripheralManager
     private let centralManager: CentralManager
     private let locationManager: LocationManager
-//    private let notificationManager: NotificationManager
+    private let notificationManager: NotificationManager
 
     init(_ identifier: String, serviceUUID: CBUUID, code: BeaconCode, database: Database) {
         logger = ConcreteLogger(subsystem: "Beacon", category: "Transceiver(" + identifier + ")")
         peripheralManager = PeripheralManager(identifier, serviceUUID: serviceUUID, code: code)
         centralManager = CentralManager(identifier, serviceUUID: serviceUUID, database: database)
         locationManager = LocationManager()
-//        notificationManager = NotificationManager(identifier)
-//        notificationManager.notification("C19X-iOS-BLE", "Active", delay: 60, repeats: true)
+        notificationManager = NotificationManager(identifier)
+        notificationManager.notification("C19X-iOS-BLE", "Active", delay: 60, repeats: true)
     }
 }
 
@@ -49,9 +49,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         if #available(iOS 9.0, *) {
           locationManager.allowsBackgroundLocationUpdates = true
         }
-        locationManager.startUpdatingLocation()
         let beaconRegion = CLBeaconRegion(proximityUUID: uuid, identifier: uuid.uuidString)
-        locationManager.startMonitoring(for: beaconRegion)
+        locationManager.startUpdatingLocation()
         if #available(iOS 13.0, *) {
             locationManager.startRangingBeacons(satisfying: CLBeaconIdentityConstraint(uuid: uuid))
         } else {
@@ -66,7 +65,6 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         } else {
             locationManager.stopRangingBeacons(in: beaconRegion)
         }
-        locationManager.stopMonitoring(for: beaconRegion)
         locationManager.stopUpdatingLocation()
         logger.log(.debug, "deinit")
     }
