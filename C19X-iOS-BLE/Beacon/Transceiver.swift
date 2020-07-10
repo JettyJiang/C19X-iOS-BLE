@@ -179,10 +179,10 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
         logger.log(.debug, "init.delegate")
         self.identifier = identifier
         self.serviceUUID = serviceUUID
-        let ancsServiceUUID = CBUUID(string: "7905F431-B5CE-4E99-A40F-4B1E122D00D0")
-        let mediaServiceUUID = CBUUID(string: "89d3502b-0f36-433a-8ef4-c502ad55f8dc")
-        let continuityServiceUUID = CBUUID(string: "d0611e78-bbb4-4591-a5f8-487910ae4366")
-        self.serviceUUIDs = [serviceUUID, ancsServiceUUID, mediaServiceUUID, continuityServiceUUID]
+//        let ancsServiceUUID = CBUUID(string: "7905F431-B5CE-4E99-A40F-4B1E122D00D0")
+//        let mediaServiceUUID = CBUUID(string: "89d3502b-0f36-433a-8ef4-c502ad55f8dc")
+//        let continuityServiceUUID = CBUUID(string: "d0611e78-bbb4-4591-a5f8-487910ae4366")
+        self.serviceUUIDs = [serviceUUID] //, ancsServiceUUID, mediaServiceUUID, continuityServiceUUID]
         self.database = database
         self.dispatchQueue = DispatchQueue(label: identifier+".delegate")
     }
