@@ -52,3 +52,10 @@
 7. Phone C (android), run advert app, expect B to detect C
 8. Phone A out of faraday bag, expect B not to detect A but detect C
 
+2020-07-10 : iOS-iOS background non-detection when phone is locked, covered and idle
+1. Phone A and B, uninstall app, Settings > Display & Brightness > Lock/Unlock OFF (where available), Raise to Wake OFF, power off
+2. Phone A, install and start app, background, confirm advertising, disconnect from Xcode, place in faraday bag
+3. Phone B, install and start app, background, confirm advertising, keep connected to Xcode
+4. Wait 2 minutes, Phone A out of faraday bag, expect B to not detect A
+5. Phone B, touch screen to trigger screen ON, expect B to detect A
+
