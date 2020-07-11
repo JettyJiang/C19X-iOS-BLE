@@ -18,15 +18,15 @@ class Transceiver: NSObject, CLLocationManagerDelegate {
     private let peripheralManager: PeripheralManager
     private let centralManager: CentralManager
     private let locationManager: LocationManager
-    private let notificationManager: NotificationManager
+//    private let notificationManager: NotificationManager
 
     init(_ identifier: String, serviceUUID: CBUUID, code: BeaconCode, database: Database) {
         logger = ConcreteLogger(subsystem: "Beacon", category: "Transceiver(" + identifier + ")")
         peripheralManager = PeripheralManager(identifier, serviceUUID: serviceUUID, code: code)
         centralManager = CentralManager(identifier, serviceUUID: serviceUUID, database: database)
         locationManager = LocationManager()
-        notificationManager = NotificationManager(identifier)
-        notificationManager.notification("C19X-iOS-BLE", "Active", delay: 60, repeats: true)
+//        notificationManager = NotificationManager(identifier)
+//        notificationManager.notification("C19X-iOS-BLE", "Active", delay: 60, repeats: true)
     }
 }
 
@@ -69,21 +69,21 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         logger.log(.debug, "deinit")
     }
     
-    func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState, for region: CLRegion) {
-        logger.log(.debug, "didDetermineState(state=\(state.description),region=\(region.description))")
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didRangeBeacons beacons: [CLBeacon], in region: CLBeaconRegion) {
-        logger.log(.debug, "didRangeBeacons(beacons=\(beacons.description),region=\(region.description))")
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
-        logger.log(.debug, "didEnterRegion(region=\(region.description))")
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
-        logger.log(.debug, "didExitRegion(region=\(region.description))")
-    }
+//    func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState, for region: CLRegion) {
+//        logger.log(.debug, "didDetermineState(state=\(state.description),region=\(region.description))")
+//    }
+//
+//    func locationManager(_ manager: CLLocationManager, didRangeBeacons beacons: [CLBeacon], in region: CLBeaconRegion) {
+//        logger.log(.debug, "didRangeBeacons(beacons=\(beacons.description),region=\(region.description))")
+//    }
+//
+//    func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
+//        logger.log(.debug, "didEnterRegion(region=\(region.description))")
+//    }
+//
+//    func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
+//        logger.log(.debug, "didExitRegion(region=\(region.description))")
+//    }
 }
 
 class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
@@ -228,14 +228,9 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
             logger.log(.fault, "scan !poweredOn (\(central.description))")
             return
         }
-        logger.log(.debug, "scan requested (\(central.description)) -> didDiscover")
-        database.insert("scan requested")
-        dispatchQueue.asyncAfter(deadline: DispatchTime.now() + 8) {
-            self.logger.log(.debug, "scan (\(central.description)) -> didDiscover")
-            self.database.insert("scan")
-            central.scanForPeripherals(withServices: self.serviceUUIDs)
-        }
-        
+        logger.log(.debug, "scan (\(central.description)) -> didDiscover")
+        database.insert("scan")
+        central.scanForPeripherals(withServices: serviceUUIDs)
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
@@ -284,7 +279,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
             logger.log(.debug, "didDisconnectPeripheral (\(peripheral.description)) -> connect")
         }
         database.insert("didDisconnectPeripheral  (\(peripheral.description))")
-        //centralManager(central, connect: peripheral)
+        centralManager(central, connect: peripheral)
     }
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
@@ -294,7 +289,7 @@ class CentralManagerDelegate: NSObject, CBCentralManagerDelegate, CBPeripheralDe
             logger.log(.debug, "didFailToConnect (\(peripheral.description)) -> connect")
         }
         database.insert("didFailToConnect  (\(peripheral.description))")
-        //centralManager(central, connect: peripheral)
+        centralManager(central, connect: peripheral)
     }
     
     func centralManager(_ central: CBCentralManager, connectionEventDidOccur event: CBConnectionEvent, for peripheral: CBPeripheral) {
